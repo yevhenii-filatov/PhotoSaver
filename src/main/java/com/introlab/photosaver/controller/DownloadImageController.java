@@ -2,14 +2,15 @@ package com.introlab.photosaver.controller;
 
 import com.introlab.photosaver.download.ImageDownloader;
 import com.introlab.photosaver.model.dto.BaseResponse;
+import com.introlab.photosaver.repository.LinkStateRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.*;
 
+import javax.transaction.Transactional;
 import java.io.File;
 import java.io.IOException;
-import java.util.Objects;
 
 /**
  * @author Yevhenii Filatov
@@ -22,10 +23,12 @@ import java.util.Objects;
 public class DownloadImageController {
     private final ImageDownloader imageDownloader;
     private final UrlValidator urlValidator;
+    private final LinkStateRepository linkStateRepository;
 
-    public DownloadImageController(ImageDownloader imageDownloader, UrlValidator urlValidator) {
+    public DownloadImageController(ImageDownloader imageDownloader, UrlValidator urlValidator, LinkStateRepository linkStateRepository) {
         this.imageDownloader = imageDownloader;
         this.urlValidator = urlValidator;
+        this.linkStateRepository = linkStateRepository;
     }
 
     @GetMapping("/download-image")
@@ -36,7 +39,8 @@ public class DownloadImageController {
         }
 
         try {
-            imageDownloader.download(profileUrl, imageUrl);
+            File image = imageDownloader.download(profileUrl, imageUrl);
+            saveImageNameToStateDb(image, profileUrl);
             return BaseResponse.SUCCESS;
         } catch (IOException e) {
             switch (e.getMessage()) {
@@ -47,6 +51,11 @@ public class DownloadImageController {
                 default: return new BaseResponse(e.getMessage(), 520);
             }
         }
+    }
+
+    @Transactional
+    protected void saveImageNameToStateDb(File image, String profileUrl) {
+        linkStateRepository.setImageNameForLink(profileUrl, image.getName());
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
