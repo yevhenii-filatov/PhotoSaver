@@ -12,32 +12,41 @@ import lombok.experimental.FieldDefaults;
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
+/**
+ * @author Yevhenii Filatov
+ * @since 6/19/20
+ **/
+
 @Data
 @Entity
-@Table(indexes = {@Index(name = "IDX_STATE", columnList = "link")})
-@EqualsAndHashCode(of = {"link"})
+@Table(name = "link")
+@EqualsAndHashCode(of = {"value"})
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class LinkState {
-
+public class Link {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     Long id;
 
-    @Column(length = 500)
-    String link;
+    @Column(name = "value")
+    String value;
 
-    @Column
-    Boolean inited = false;
+    @Column(name = "profile")
+    String pageSource;
 
-    @Column
-    Boolean mapped = false;
+    @Column(name = "activities")
+    String activitiesSource;
+
+    @Column(name = "processed")
+    Boolean parsed;
+
+    @JsonDeserialize(using = LocalDateDeserializer.class)
+    @JsonSerialize(using = LocalDateSerializer.class)
+    @Column(name = "updated_at")
+    LocalDateTime updatedAt;
 
     @Column(name = "computer_name")
     String computerName;
 
-    @JsonDeserialize(using = LocalDateDeserializer.class)
-    @JsonSerialize(using = LocalDateSerializer.class)
-    @Column(name = "take_at")
-    LocalDateTime takeAt;
-
+    @Column(name = "deployed")
+    Boolean deployed;
 }

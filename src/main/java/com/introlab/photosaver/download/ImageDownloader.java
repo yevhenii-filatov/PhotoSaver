@@ -6,12 +6,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.UUID;
 
 import static org.apache.commons.lang3.StringUtils.removeEnd;
 import static org.apache.commons.lang3.StringUtils.substringAfterLast;
@@ -29,11 +32,12 @@ public class ImageDownloader {
     private static final String SLASH = "/";
 
     public File download(String profileUrl, String imageUrl) throws IOException {
-        return download(profileUrl, imageUrl, Format.PNG);
-    }
+        HttpResponse<byte[]> response = Unirest.get(imageUrl).asBytes();
+        if (!response.isSuccess()) {
+            throwRelevantException(response);
+        }
 
-    public File download(String profileUrl, String imageUrl, Format format) throws IOException {
-        String rawImagePath = generateImagePath(profileUrl, format);
+        String rawImagePath = generateImagePath(profileUrl);
         Path imagePath = Paths.get(rawImagePath);
         if (Files.exists(imagePath)) {
             log.warn("Overwriting profile photo for {}", profileUrl);
@@ -41,17 +45,13 @@ public class ImageDownloader {
         }
 
         File image = new File(rawImagePath);
-        HttpResponse<File> response = Unirest
-                .get(imageUrl)
-                .asFile(image.getPath());
-
-        if (!response.isSuccess()) {
-            throwRelevantException(response);
-        }
-        return response.getBody();
+        InputStream byteInputStream = new ByteArrayInputStream(response.getBody());
+        BufferedImage bufferedImage = ImageIO.read(byteInputStream);
+        ImageIO.write(bufferedImage, "png", image);
+        return image;
     }
 
-    private void throwRelevantException(HttpResponse<File> response) throws IOException {
+    private void throwRelevantException(HttpResponse<byte[]> response) throws IOException {
         switch (response.getStatus()) {
             case 400 :
                 throw new IOException("bad request");
@@ -70,20 +70,9 @@ public class ImageDownloader {
         }
     }
 
-    private String generateImagePath(String profileUrl, Format format) {
+    private String generateImagePath(String profileUrl) {
         String normalizedProfileUrl = removeEnd(profileUrl, SLASH);
         normalizedProfileUrl = substringAfterLast(normalizedProfileUrl, SLASH);
-        return String.format("%s/%s.%s", destinationFolder, normalizedProfileUrl, format);
-    }
-
-    public enum Format {
-        JPG,
-        PNG,
-        BMP;
-
-        @Override
-        public String toString() {
-            return this.name().toLowerCase();
-        }
+        return String.format("%s/%s.png", destinationFolder, normalizedProfileUrl);
     }
 }
