@@ -46,6 +46,7 @@ public class DownloadImageController {
         log.info("{}", profileUrl);
         log.info("{}", imageUrl);
         if (!urlValidator.isValid(profileUrl) || !urlValidator.isValid(imageUrl)) {
+            log.info("{} for {}\n",  HttpStatus.BAD_REQUEST.getReasonPhrase(), profileUrl);
             return new ResponseEntity("not valid input params", HttpStatus.BAD_REQUEST);
         }
         ResponseEntity result = process(profileUrl, imageUrl);
