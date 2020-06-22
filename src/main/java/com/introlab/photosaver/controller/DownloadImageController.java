@@ -7,7 +7,11 @@ import com.introlab.photosaver.repository.LinkRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.springframework.web.bind.MissingServletRequestParameterException;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.transaction.Transactional;
 import java.io.File;
@@ -38,10 +42,17 @@ public class DownloadImageController {
     public BaseResponse saveImage(@RequestBody SaveImageRequest saveImageRequest) {
         String profileUrl = saveImageRequest.getProfileUrl();
         String imageUrl = saveImageRequest.getImageUrl();
+        log.info("{}", profileUrl);
+        log.info("{}", imageUrl);
         if (!urlValidator.isValid(profileUrl) || !urlValidator.isValid(imageUrl)) {
             return BaseResponse.INCORRECT_QUERY_PARAMETERS;
         }
+        BaseResponse result = process(profileUrl, imageUrl);
+        log.info("{} for {}\n", result.getStatus(), profileUrl);
+        return result;
+    }
 
+    private BaseResponse process(String profileUrl, String imageUrl) {
         try {
             File image = imageDownloader.download(profileUrl, imageUrl);
             saveImageNameToStateDb(image, profileUrl);
