@@ -48,7 +48,7 @@ public class DownloadImageController {
             return BaseResponse.INCORRECT_QUERY_PARAMETERS;
         }
         BaseResponse result = process(profileUrl, imageUrl);
-        log.info("{}\n", result.getStatus());
+        log.info("{} for {}\n", result.getStatus(), profileUrl);
         return result;
     }
 
