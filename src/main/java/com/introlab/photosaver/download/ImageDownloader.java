@@ -38,7 +38,9 @@ public class ImageDownloader {
         }
 
         String rawImagePath = generateImagePath(profileUrl);
+        
         Path imagePath = Paths.get(rawImagePath);
+        imagePath.toFile().mkdirs();
         if (Files.exists(imagePath)) {
             log.warn("Overwriting profile photo for {}", profileUrl);
             Files.delete(imagePath);
