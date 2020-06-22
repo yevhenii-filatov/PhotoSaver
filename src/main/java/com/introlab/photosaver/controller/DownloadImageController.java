@@ -62,7 +62,7 @@ public class DownloadImageController {
 
     @Transactional
     protected void saveImageNameToStateDb(File image, String profileUrl) {
-        linkRepository.setImageNameForLink(profileUrl, image.getName());
+        //linkRepository.setImageNameForLink(profileUrl, image.getName());
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
