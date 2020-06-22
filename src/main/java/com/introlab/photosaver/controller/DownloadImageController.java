@@ -38,10 +38,10 @@ public class DownloadImageController {
     public BaseResponse saveImage(@RequestBody SaveImageRequest saveImageRequest) {
         String profileUrl = saveImageRequest.getProfileUrl();
         String imageUrl = saveImageRequest.getImageUrl();
+        log.info("\n{}\n{}\n", profileUrl, imageUrl);
         if (!urlValidator.isValid(profileUrl) || !urlValidator.isValid(imageUrl)) {
             return BaseResponse.INCORRECT_QUERY_PARAMETERS;
         }
-
         try {
             File image = imageDownloader.download(profileUrl, imageUrl);
             saveImageNameToStateDb(image, profileUrl);
