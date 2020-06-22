@@ -57,7 +57,7 @@ public class DownloadImageController {
         try {
             File image = imageDownloader.download(profileUrl, imageUrl);
             saveImageNameToStateDb(image, profileUrl);
-            return new ResponseEntity("not valid input params", HttpStatus.OK);
+            return new ResponseEntity(HttpStatus.OK);
         } catch (IOException e) {
             switch (e.getMessage()) {
                 case "bad request":
