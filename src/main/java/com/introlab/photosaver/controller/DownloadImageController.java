@@ -43,10 +43,16 @@ public class DownloadImageController {
         String profileUrl = saveImageRequest.getProfileUrl();
         String imageUrl = saveImageRequest.getImageUrl();
         log.info("{}", profileUrl);
-        log.info("{}\n", imageUrl);
+        log.info("{}", imageUrl);
         if (!urlValidator.isValid(profileUrl) || !urlValidator.isValid(imageUrl)) {
             return BaseResponse.INCORRECT_QUERY_PARAMETERS;
         }
+        BaseResponse result = process(profileUrl, imageUrl);
+        log.info("{}\n", result.getStatus());
+        return result;
+    }
+
+    private BaseResponse process(String profileUrl, String imageUrl) {
         try {
             File image = imageDownloader.download(profileUrl, imageUrl);
             saveImageNameToStateDb(image, profileUrl);
