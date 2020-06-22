@@ -2,6 +2,7 @@ package com.introlab.photosaver.controller;
 
 import com.introlab.photosaver.download.ImageDownloader;
 import com.introlab.photosaver.model.dto.BaseResponse;
+import com.introlab.photosaver.model.payload.SaveImageRequest;
 import com.introlab.photosaver.repository.LinkRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.validator.routines.UrlValidator;
@@ -33,9 +34,10 @@ public class DownloadImageController {
         this.linkRepository = linkRepository;
     }
 
-    @GetMapping("/download-image")
-    public BaseResponse saveImage(@RequestParam(name = "profileUrl") String profileUrl,
-                                  @RequestParam(name = "imageUrl") String imageUrl) {
+    @PostMapping("/download-image")
+    public BaseResponse saveImage(@RequestBody SaveImageRequest saveImageRequest) {
+        String profileUrl = saveImageRequest.getProfileUrl();
+        String imageUrl = saveImageRequest.getImageUrl();
         if (!urlValidator.isValid(profileUrl) || !urlValidator.isValid(imageUrl)) {
             return BaseResponse.INCORRECT_QUERY_PARAMETERS;
         }
