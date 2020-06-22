@@ -1,11 +1,12 @@
 package com.introlab.photosaver.controller;
 
 import com.introlab.photosaver.download.ImageDownloader;
-import com.introlab.photosaver.model.dto.BaseResponse;
 import com.introlab.photosaver.model.payload.SaveImageRequest;
 import com.introlab.photosaver.repository.LinkRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.validator.routines.UrlValidator;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -39,36 +40,36 @@ public class DownloadImageController {
     }
 
     @PostMapping("/download-image")
-    public BaseResponse saveImage(@RequestBody SaveImageRequest saveImageRequest) {
+    public ResponseEntity saveImage(@RequestBody SaveImageRequest saveImageRequest) {
         String profileUrl = saveImageRequest.getProfileUrl();
         String imageUrl = saveImageRequest.getImageUrl();
         log.info("{}", profileUrl);
         log.info("{}", imageUrl);
         if (!urlValidator.isValid(profileUrl) || !urlValidator.isValid(imageUrl)) {
-            return BaseResponse.INCORRECT_QUERY_PARAMETERS;
+            return new ResponseEntity("not valid input params", HttpStatus.BAD_REQUEST);
         }
-        BaseResponse result = process(profileUrl, imageUrl);
-        log.info("{} for {}\n", result.getStatus(), profileUrl);
+        ResponseEntity result = process(profileUrl, imageUrl);
+        log.info("{} for {}\n", result.getStatusCode().getReasonPhrase(), profileUrl);
         return result;
     }
 
-    private BaseResponse process(String profileUrl, String imageUrl) {
+    private ResponseEntity process(String profileUrl, String imageUrl) {
         try {
             File image = imageDownloader.download(profileUrl, imageUrl);
             saveImageNameToStateDb(image, profileUrl);
-            return BaseResponse.SUCCESS;
+            return new ResponseEntity("not valid input params", HttpStatus.OK);
         } catch (IOException e) {
             switch (e.getMessage()) {
                 case "bad request":
-                    return BaseResponse.INCORRECT_QUERY_PARAMETERS;
+                    return new ResponseEntity(HttpStatus.NOT_ACCEPTABLE);
                 case "not found":
-                    return BaseResponse.NOT_FOUND;
+                    return new ResponseEntity(HttpStatus.NOT_FOUND);
                 case "internal server error":
-                    return BaseResponse.INTERNAL_SERVER_ERROR;
+                    return new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);
                 case "forbidden":
-                    return BaseResponse.FORBIDDEN;
+                    return new ResponseEntity(HttpStatus.FORBIDDEN);
                 default:
-                    return new BaseResponse(e.getMessage(), 520);
+                    return new ResponseEntity(HttpStatus.I_AM_A_TEAPOT);
             }
         }
     }
@@ -79,7 +80,8 @@ public class DownloadImageController {
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
-    public BaseResponse handleMissingParamsError() {
-        return BaseResponse.INCORRECT_QUERY_PARAMETERS;
+    public ResponseEntity handleMissingParamsError() {
+        return new ResponseEntity(HttpStatus.NOT_ACCEPTABLE);
     }
+    
 }
