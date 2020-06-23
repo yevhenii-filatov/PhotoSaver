@@ -30,6 +30,9 @@ public class Link {
     @Column(name = "value")
     String value;
 
+    @Column(name = "profile_photo_name")
+    String profilePhotoName;
+
     @Column(name = "profile")
     String pageSource;
 

@@ -8,13 +8,8 @@ import org.apache.commons.validator.routines.UrlValidator;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MissingServletRequestParameterException;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import javax.transaction.Transactional;
 import java.io.File;
 import java.io.IOException;
 
@@ -57,7 +52,7 @@ public class DownloadImageController {
     private ResponseEntity process(String profileUrl, String imageUrl) {
         try {
             File image = imageDownloader.download(profileUrl, imageUrl);
-            saveImageNameToStateDb(image, profileUrl);
+            saveImageNameToLinksDb(image, profileUrl);
             return new ResponseEntity(HttpStatus.OK);
         } catch (IOException e) {
             switch (e.getMessage()) {
@@ -75,14 +70,15 @@ public class DownloadImageController {
         }
     }
 
-    @Transactional
-    protected void saveImageNameToStateDb(File image, String profileUrl) {
-        //linkRepository.setImageNameForLink(profileUrl, image.getName());
+    protected void saveImageNameToLinksDb(File image, String profileUrl) {
+        int affectedRowsCount = linkRepository.setImageNameForUrl(profileUrl, image.getName());
+        if (affectedRowsCount != 1) {
+            log.warn("An error occurred while saving profile photo name ({}) for link {}", image.getName(), profileUrl);
+        }
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity handleMissingParamsError() {
         return new ResponseEntity(HttpStatus.NOT_ACCEPTABLE);
     }
-    
 }
