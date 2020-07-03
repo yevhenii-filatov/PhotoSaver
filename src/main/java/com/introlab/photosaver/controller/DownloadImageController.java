@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 /**
  * @author Yevhenii Filatov
@@ -22,6 +24,7 @@ import java.io.IOException;
 @RestController
 @RequestMapping("/api")
 public class DownloadImageController {
+    private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private final ImageDownloader imageDownloader;
     private final UrlValidator urlValidator;
     private final LinkRepository linkRepository;
@@ -36,6 +39,7 @@ public class DownloadImageController {
 
     @PostMapping("/download-image")
     public ResponseEntity saveImage(@RequestBody SaveImageRequest saveImageRequest) {
+        log.info("Received request at: {}", getFormattedCurrentDateTime());
         String profileUrl = saveImageRequest.getProfileUrl();
         String imageUrl = saveImageRequest.getImageUrl();
         log.info("{}", profileUrl);
@@ -46,7 +50,13 @@ public class DownloadImageController {
         }
         ResponseEntity result = process(profileUrl, imageUrl);
         log.info("{} for {}\n", result.getStatusCode().getReasonPhrase(), profileUrl);
+        log.info("Finished request processing at {}", getFormattedCurrentDateTime());
         return result;
+    }
+
+    private String getFormattedCurrentDateTime() {
+        LocalDateTime now = LocalDateTime.now();
+        return now.format(dateTimeFormatter);
     }
 
     private ResponseEntity process(String profileUrl, String imageUrl) {
